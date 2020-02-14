@@ -48,11 +48,13 @@ Pass `-h` for a detailed overview of command line parameters.
 ## Data for Gap Filling
 
 The implemented gap filling methods have been tested on synthetic data as well as real-world remote sensing datasets.
-Via `-d Chess` to the software, experiments can be run with the synthetic data and gaps at `t=2`.
-By passing `-d Chess2`, experiments use the synthetic data where `t=2` is totally missing.
+Via `-d Chess`, experiments can be run with the synthetic data and gaps at `t=2`.
+By passing `-d Chess2`, experiments use the synthetic data where `t=2` is completely missing.
 
-The `Dortmund From Space 2018` data (aka `GER`) has been donated to *UC Irvine Machine Learning Repository* but has not been published yet.
-It is based on Landsat 8 OLI/TIRS C1 Level-2 data, which is on-demand distributed by U.S. Geological Survey's Earth Resources Observation and Science (EROS) Center.
+The `Dortmund From Space 2018` data (aka `GER`) can be found at <https://www.dropbox.com/sh/ohbb4zpae9djb3z/AADi5qGbsPB2peLGg2-gh8LWa>.
+For usage, download it directly, unzip the obtained archive, and pass `-d [download path]/dortmund_from_space_2018/` to the software.
+It uses the `dortmund_from_space_2018_Handler`, which comes with this package.
+The data is based on Landsat 8 OLI/TIRS C1 Level-2 data, which is on-demand distributed by U.S. Geological Survey's Earth Resources Observation and Science (EROS) Center.
 More information can be found in the README that comes with the data.
 
 ## Outline of Gap Filling Method

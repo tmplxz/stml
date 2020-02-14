@@ -50,7 +50,7 @@ def get_data_handler(data, subrange):
         if h_id in data:
             return hand(data, subrange)
     msg = '''No implemented handler for the specified dataset.
-        Implemented handlers (with string data_ids that need to be found in -f argument):\n\n'''
+        Implemented handlers (with string data_ids that need to be found in -d argument):\n\n'''
     handlers = '\n'.join(['{} (data_id: "{}") - {}'.format(
         hand.__name__, h_id, hand.__doc__) for hand, h_id in hand_ids])
     raise NotImplementedError(msg + handlers)
@@ -389,12 +389,11 @@ class Chess2_Handler(Chess_Handler):
 
 class dortmund_from_space_2018_Handler(SingleSampleImageTimeSeriesHandler):
     """
-    Handler for Dortmund from Space 2018 data.
-    It features surface reflectance of a region in Germany from 2018.
+    Handler for Dortmund from Space 2018 data
+    Downloadable from https://www.dropbox.com/sh/ohbb4zpae9djb3z/AADi5qGbsPB2peLGg2-gh8LWa
+    It features surface reflectance of a region in Germany from 2018
     The data is an extract of Landsat 8 OLI/TIRS C1 Level-2 data, distributed by USGS
-    More info:
-    [coming soon]
-    https://www.usgs.gov/centers/eros/science/usgs-eros-archive-landsat-archives-landsat-8-olitirs-level-2-data-products
+    More info in README that comes with the data
     """
     def __init__(self, dirname, subrange):
         if (os.path.isfile('.dates.npy') and
