@@ -1,0 +1,72 @@
+"""main application for filling gaps in spatio-temporal data via command line"""
+import os
+import sys
+import argparse
+import json
+
+from stml.data_access import get_data_handler
+from stml.helpers import ConsoleOutput
+from stml.validation import Validation
+from stml.methods import get_method
+
+
+def run(run_config):
+    cons = ConsoleOutput(run_config.kfolds, run_config.cpus)
+    try:
+        if run_config.em_iters < 1:
+            raise RuntimeError('Invalid value "{}" for em_iters, has to be positive!'.format(run_config.em_iters))
+        cons.centered('LOADING DATA', emptystart=True)
+        data_handler = get_data_handler(run_config.data, run_config.range.lower())
+        valid_handler = Validation(data_handler, run_config.kfolds, run_config.shuffle, run_config.hide_amount, run_config.hide_method, cons)
+        method_handler = get_method(run_config.method, run_config.config, valid_handler, cons, run_config.em_iters)
+        method_handler.run(run_config.kfolds, run_config.cpus)
+        cons.centered('FINISHED', emptystart=True)
+    except Exception as error:
+        cons.centered('!! ERROR !!', emptystart=True)
+        print(str(error))
+        sys.exit(1)
+    sys.exit(0)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    # DATA PARAMETERS
+    parser.add_argument('-d', '--data', default='Chess',
+                        help='file or directory with data which shall be accessed')
+    parser.add_argument('-r', '--range', default='full',
+                        help='allows to select a spatial subpart of the data')
+    # EVALUATION PARAMETERS
+    parser.add_argument('-k', '--kfolds', type=int, default=2,
+                        help='number of splits for validation')
+    parser.add_argument('-H', '--hide_amount', type=float, default=0.2,
+                        help='amount of data that should be hidden for testing (0 <= t <= 1)')
+    parser.add_argument('-M', '--hide_method', default='spatial_clouds',
+                        help='method for hiding test data')
+    parser.add_argument('-s', '--shuffle', type=int, default=0,
+                        help='enables data shuffling for the validation splitting')
+    # METHOD PARAMETERS
+    parser.add_argument('-m', '--method', default='LIN',
+                        help='method that shall be run')
+    parser.add_argument('-c', '--config', default='',
+                        help='method configuration')
+    parser.add_argument('-I', '--em_iters', type=int, default=2,
+                        help='number of EM iterations (only used when training data is incomplete)')
+    parser.add_argument('-C', '--cpus', type=int, default=1,
+                        help='number of cpus that shall be used for parallel execution of cross-validation')
+
+    if not os.path.isfile('.config'):
+        args = parser.parse_args()
+        with open('.config', 'w') as conf_file:
+            json.dump(vars(args), conf_file)
+    else:
+        with open('.config') as conf_file:
+            data = json.load(conf_file)
+        args = argparse.Namespace(**data)
+        new_args = parser.parse_args()
+        args.cpus = new_args.cpus
+        args.em_iters = new_args.em_iters
+        args.hide_amount = new_args.hide_amount
+        args.hide_method = new_args.hide_method
+        args.method = new_args.method
+        args.config = new_args.config
+    run(args)

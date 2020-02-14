@@ -1,0 +1,6 @@
+include stml/cloudshape.png
+include stml/standalone_template.tex
+include stml/cleanup.sh
+include stml/logo1.png
+include stml/logo2.png
+include stml/logo3.png
