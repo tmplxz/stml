@@ -271,6 +271,29 @@ class RandomField(SpatioTemporalBase):
             pred[predicted_at] = self.discret.continuize(self.split, data[predicted_at])
 
 
+    def predict_sup(self, model, data, progr_pred=None, pred=None):
+        """predicts superposition states, i.e. mixtures of the discrete values based on (conditional) vertex marginals"""
+        states = np.array([self.discret.continuize(self.split, k) for k in range(self.discret.k)])
+        probs = np.zeros(self.discret.k)
+        if pred is None:
+            raise RuntimeError('SUP prediction not implemented without target prediction array!')
+        for idx, val in enumerate(data):
+            if progr_pred is not None:
+                if idx % 10 == 0: # do not write in every iteration
+                    progr_pred[self.split] = float(idx) / data.shape[0] * 100
+                    self.cons.progress(progr_pred, self.split)
+            model.infer(observed=val) # has to be called before probs!
+            for vertex in range(val.size):
+                if val[vertex] == HIDE_VAL:
+                    if self.shared:
+                        for state in range(model.states[vertex]):
+                            probs[state] = model.prob(vertex, state)
+                    else:
+                        for px_state, state in enumerate(self.vertex_state_maps[vertex]):
+                            probs[state] = model.prob(vertex, px_state)
+                    pred[idx, vertex] = np.dot(probs, states)
+
+
     def predict_gibbs(self, model, data, progr_pred=None, pred=None):
         """samples from the (conditional) MRF distribution (based on Gibbs sampling)"""
         import pxpy as px

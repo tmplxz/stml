@@ -19,7 +19,7 @@ def test_mrf_valid_config():
     for lam in ['0.1', '0.001']:
         mrf_config = '0.1r,cross3,noprior:noprior,{},map,6'.format(lam)
         RandomField(mrf_config, [1, 2, 3], None, 2)
-    for pred in ['gibbs', 'map']:
+    for pred in ['gibbs', 'map', 'sup']:
         mrf_config = '0.1r,cross3,noprior:noprior,0.1,{},6'.format(pred)
         RandomField(mrf_config, [1, 2, 3], None, 2)
     cleanup()
@@ -48,7 +48,7 @@ def test_mrf_invalid_config():
         mrf_config = '0.1r,cross3,noprior:noprior,{},map,6'.format(lam)
         with pytest.raises(RuntimeError):
             RandomField(mrf_config, [1, 2, 3], None, 2)
-    for pred in ['foo', 'mapsups', 'sup']:
+    for pred in ['foo', 'mapsups']:
         mrf_config = '0.1r,cross3,noprior:noprior,0.1,{},6'.format(pred)
         with pytest.raises(RuntimeError):
             RandomField(mrf_config, [1, 2, 3], None, 2)
