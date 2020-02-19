@@ -75,7 +75,10 @@ More information can be found in the README that comes with the data.
 
 ## Attached Results
 
-[coming soon]
+Visual and quantitative results for the `FRA` data can be found at <https://www.dropbox.com/sh/rj959rhjr9ndec0/AAAOA8vSzv0pANMFZXstjxwWa>.
+They have been generated with the software, and images can also be inspected with the `gap_filling_viewer`, by passing the downloaded directories as arguments. As an example, viewing downloaded *CROSS* predictions can be done by running:
+
+`python scripts/gap_filling_viewer.py -l [path]/imgs/original_outline/ -m [path]/imgs/mask/ -r [path]/imgs/pred_outline_mrf_s0_01_tp_es_0_01_cross3_sup_em5_k32means_spatial_clouds0_2/ -R [path]/report_mrf_s0_01_tp_es_0_01_cross3_sup_em5_k32means_spatial_clouds0_2.csv -y 2016`.
 
 ## Reference
 
