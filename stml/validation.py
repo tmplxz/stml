@@ -208,7 +208,7 @@ class Validation:
         assert(data.shape == obs.shape)
         assert(len(data.shape) == 4)
         data[np.invert(obs)] = HIDE_VAL # hide all not observed values
-        return data, obs
+        return data.astype(float), obs
 
 
     def evaluate_prediction(self, time_train, predicted, pred_name):
