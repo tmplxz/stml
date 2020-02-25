@@ -85,7 +85,7 @@ class ConsoleOutput:
         return output
 
 
-def draw_structure(edges, positions, fname, max_y=4):
+def draw_structure(edges, positions, fname, max_y=4, labels=True):
     try:
         import networkx as nx
         import matplotlib.pyplot as plt
@@ -97,7 +97,11 @@ def draw_structure(edges, positions, fname, max_y=4):
     edges = [edge for edge in edges if all([positions[node][1] < max_y for node in edge])]
     for edge in edges:
         G.add_edge(edge[0], edge[1])
-    nx.draw_networkx(G, pos=positions, font_size=8)
+    if labels:
+        nx.draw_networkx(G, pos=positions, font_size=8)
+    else:
+        nx.draw_networkx_nodes(G, pos=positions, node_size=50)
+        nx.draw_networkx_edges(G, pos=positions)
     plt.savefig(fname, bbox_inches='tight', pad_inches=-0.2)
 
 

@@ -5,7 +5,7 @@ import sys
 import warnings
 import numpy as np
 
-from stml.helpers import find_method, load_obj, save_obj
+from stml.helpers import find_method, load_obj, save_obj, draw_structure
 from stml.tex_output import plot
 from stml.discretization import Discretization
 from stml.validation import cv_foldername, HIDE_VAL
@@ -42,7 +42,6 @@ class RandomField(SpatioTemporalBase):
 
 
     def configure(self, config):
-        from stml.helpers import draw_structure
         try:
             prior_methods = [(reg.split('_', 1)[1], mem) for (reg, mem) in inspect.getmembers(self, inspect.ismethod) if reg.startswith('prior_')]
             pred_methods = [(pred.split('_', 1)[1], mem) for (pred, mem) in inspect.getmembers(self, inspect.ismethod) if pred.startswith('predict_')]
