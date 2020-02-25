@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # METHOD PARAMETERS
     parser.add_argument('-m', '--method', default='LIN',
                         help='method that shall be run')
-    parser.add_argument('-c', '--config', default='',
+    parser.add_argument('-c', '--config', default='default',
                         help='method configuration')
     parser.add_argument('-I', '--em_iters', type=int, default=2,
                         help='number of EM iterations (only used when training data is incomplete)')
