@@ -87,6 +87,8 @@ class ConsoleOutput:
 
 def draw_structure(edges, positions, fname, max_y=4, labels=True):
     try:
+        import matplotlib
+        matplotlib.use('Agg')
         import networkx as nx
         import matplotlib.pyplot as plt
     except ImportError:
