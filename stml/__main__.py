@@ -4,6 +4,8 @@ import sys
 import argparse
 import json
 
+import numpy as np
+
 from stml.data_access import get_data_handler
 from stml.helpers import ConsoleOutput
 from stml.validation import Validation
@@ -12,6 +14,8 @@ from stml.methods import get_method
 
 def run(run_config):
     cons = ConsoleOutput(run_config.kfolds, run_config.cpus)
+    if run_config.seed is not None:
+        np.random.seed(run_config.seed)
     try:
         if run_config.em_iters < 1:
             raise RuntimeError('Invalid value "{}" for em_iters, has to be positive!'.format(run_config.em_iters))
@@ -44,6 +48,8 @@ if __name__ == '__main__':
                         help='method for hiding test data')
     parser.add_argument('-s', '--shuffle', type=int, default=0,
                         help='enables data shuffling for the validation splitting')
+    parser.add_argument('-S', '--seed', type=int, default=0,
+                        help='fixes seed for reproducibility (set to None to disable)')
     # METHOD PARAMETERS
     parser.add_argument('-m', '--method', default='LIN',
                         help='method that shall be run')
