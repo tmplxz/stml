@@ -5,6 +5,7 @@ import time
 
 from stml.random_fields import RandomField
 from stml.methods_simple import LIN, NN, HANTS
+from stml.nspi import NSPI
 
 
 def get_method(methodname, config, data_handler, console, emiters):
