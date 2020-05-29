@@ -14,7 +14,7 @@ The software is implemented and tested with Python 3.5.
 It comes with a Dockerfile and thus can be run inside a Docker container.
 For usage without containers, Python needs to be installed.
 Next install this package by running `pip install .` in the root directoriy of the repository.
-There are some mandatory package requirements (*numpy*, *scipy*, *scikit-learn*, *Pillow*), which will be installed on the fly.
+There are some mandatory package requirements (*numpy*, *scipy*, *scikit-learn*, *Pillow*, *scikit-image*), which will be installed on the fly.
 To make use of the whole functionality, you might also want to consider installing the optional packages:
 
 * pxpy (for probabilistic gap filling)
@@ -68,10 +68,6 @@ This software allows to reproduce all these results, the command line arguments 
 `-r [path]/imgs/pred_outline_mrf_s0_01_tp_es_0_01_cross3_sup_em5_k32means_spatial_clouds0_2/`
 `-R [path]/report_mrf_s0_01_tp_es_0_01_cross3_sup_em5_k32means_spatial_clouds0_2.csv`
 `-y 2016`
-
-Note that the `GER` results may slightly differ from results presented in the paper, due to a former error in the interpretation of `GER` cloud masks (now fixed).
-However, the new results lead to similar conclusions, and do not significantly impact our reasoning in the paper.
-The older quantitative results can still be found here <https://www.dropbox.com/sh/hut04kl83lwe2zt/AADGnMAKgj4asM_4QngfLIDOa>.
 
 ## Reference
 

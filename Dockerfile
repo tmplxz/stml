@@ -11,6 +11,7 @@ RUN pacman --noconfirm -S python-pillow
 RUN pacman --noconfirm -S python-networkx
 RUN pip install pxpy==1.0a20
 RUN pip install threadpoolctl
+RUN pip install scikit-image
 
 RUN mkdir -p /home/exp/stml
 RUN mkdir -p /home/exp/scripts

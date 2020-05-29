@@ -2,6 +2,10 @@ import os
 import re
 import numpy as np
 
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from skimage.metrics import structural_similarity as ssim
+# from skimage.measure import compare_ssim as ssim
+
 from stml.tex_output import plot
 
 
@@ -33,11 +37,46 @@ def compare(prediction, original, hidden):
     """compares the artificially hidden parts of a prediction with original data"""
     cnt_hid = np.count_nonzero(hidden)
     if cnt_hid == 0:
-        return 0, 0, 0
-    diff = original[hidden] - prediction[hidden]
-    mae = np.mean(np.abs(diff))
-    rmse = np.sqrt(np.mean(np.square(diff)))
-    return cnt_hid, mae, rmse
+        return 0, 0, 0, 0
+    y_true, y_pred = original[hidden], prediction[hidden]
+    mae = mean_absolute_error(y_true, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    r2 = r2_score(y_true, y_pred)
+    return cnt_hid, mae, rmse, r2
+
+
+def calc_ssim(prediction, data, hidden, testidcs, W, H):
+    # restructure to image data
+    idx_r, idx_c = np.unravel_index(testidcs, (W, H))
+    img1 = np.zeros((idx_r.max() - idx_r.min() + 1, idx_c.max() - idx_c.min() + 1, data.shape[2]))
+    img2 = np.zeros((idx_r.max() - idx_r.min() + 1, idx_c.max() - idx_c.min() + 1, data.shape[2]))
+    idx_c = idx_c - idx_c.min()
+    idx_r = idx_r - idx_r.min()
+    for idx in range(data.shape[0]):
+        if hidden[idx, data.shape[1] // 2]:
+            img2[idx_r[idx], idx_c[idx], :] = prediction[idx , data.shape[1] // 2, :]
+        else:
+            img2[idx_r[idx], idx_c[idx], :] = data[idx, data.shape[1] // 2, :]
+        img1[idx_r[idx], idx_c[idx], :] = data[idx, data.shape[1] // 2, :]
+    # calculate ssim
+    return ssim(img1, img2, multichannel=True)
+
+
+def slices_to_img(data, idcs, W, H, inverse=False):
+    idx_r, idx_c = np.unravel_index(idcs, (W, H))
+    idx_c = idx_c - idx_c.min()
+    idx_r = idx_r - idx_r.min()
+    if inverse:
+        res = np.zeros((idcs.size, data.shape[2], 1, data.shape[3]), dtype=data.dtype)
+    else:
+        res = np.zeros((idx_r.max() - idx_r.min() + 1, idx_c.max() - idx_c.min() + 1, data.shape[1], data.shape[3]), dtype=data.dtype)
+    for idx in range(idcs.size):
+        if inverse:
+            res[idx, :, 0] = data[idx_r[idx], idx_c[idx]]
+        else:
+            res[idx_r[idx], idx_c[idx]] = data[idx, :, 0]
+    del data
+    return res
 
 
 def write_comparison_report(out):
@@ -47,23 +86,23 @@ def write_comparison_report(out):
     preds = [(fname, match.group(1)) for (fname, match) in sorted(preds) if match is not None]
     versions = []
     with open(os.path.join(out, name_comp_report), 'w') as report_compare:
-        report_compare.write('version,obs,miss,hid,mae,sd_mae,rmse,rmse_std,t_train,t_pred\n')
+        report_compare.write('version,obs,miss,hid,mae,sd_mae,rmse,rmse_std,r2,r2_std,ssim,ssim_std,t_train,t_pred\n')
         for fname, version in preds:
             versions.append(os.path.basename(fname))
             report = np.genfromtxt(fname, delimiter=',')
-            if report.shape[1] == 9:
-                obs, miss, hid, mae, rmse, t_train, t_predict = report[-1, 2:]
-                mae_std = rmse_std  = 'n.a.'
+            if report.shape[1] == 11:
+                obs, miss, hid, mae, rmse, r2, ssim, t_train, t_predict = report[-1, 2:]
+                mae_std = rmse_std = r2_std = ssim_std = 'n.a.'
             else:
-                if report.shape[1] != 11:
+                if report.shape[1] != 15:
                     raise RuntimeError('Quality reports are malformed!')
-                obs, miss, hid, mae, mae_std, rmse, rmse_std, t_train, t_predict = report[-1, 2:]
-            report_compare.write('{},{},{},{},{},{},{},{},{},{}\n'.format(version, int(obs), int(miss), int(hid), mae, mae_std, rmse, rmse_std, t_train, t_predict))
+                obs, miss, hid, mae, mae_std, rmse, rmse_std, r2, r2_std, ssim, ssim_std, t_train, t_predict = report[-1, 2:]
+            report_compare.write('{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n'.format(version, int(obs), int(miss), int(hid), mae, mae_std, rmse, rmse_std, r2, r2_std, ssim, ssim_std, t_train, t_predict))
     return versions
 
 
 def plot_error_over_time(reports, cumulated=True):
-    errors = [('mae', 5), ('rmse', 7)]
+    errors = [('mae', 5), ('rmse', 7), ('r2', 9), ('ssim', 11)]
     report_data = []
     for report in reports:
         report_data.append((report[7:], np.genfromtxt(report, delimiter=',')[1:, :]))
@@ -90,7 +129,7 @@ def plot_error_for_prior(reports):
     models = {}
     all_lambs = set()
     for report in reports: # extract errors for all models and prior configs
-        errs = np.genfromtxt(report, delimiter=',')[-1, [5, 7]]
+        errs = np.genfromtxt(report, delimiter=',')[-1, [5, 7, 9, 11]]
         nameparts = re.findall(r'report_mrf_(s[\d]*_[\d]*)_([a-z\d]*_[a-z\d]*)_(\d+_[\d]*)_([a-z\d]*)_([a-z]*)_(em\d*)_([a-z\d]*)_(.*)\.csv', report)
         if len(nameparts) != 1: # no mrf model
             models[report[7:-4]] = errs
@@ -105,7 +144,7 @@ def plot_error_for_prior(reports):
             lam = float(lam.replace('_', '.'))
             models[remaining][lam] = errs
             all_lambs.add(lam)
-    for idx, err in enumerate(['mae', 'rmse']): # plot a prior error graph for each error
+    for idx, err in enumerate(['mae', 'rmse', 'r2', 'ssim']): # plot a prior error graph for each error
         fname = 'fig_method_comparison_for_prior_{}'.format(err)
         plot_data = []
         for model in models:
@@ -194,6 +233,11 @@ class Validation:
         """
         returns training or test data for a specified CV split, as selected by split and datatype
         """
+        if slice_shape == 'img':
+            slice_shape = None
+            format_to_img = True
+        else:
+            format_to_img = False
         name = cv_foldername(split)
         if datatype == 'predict':
             idcs = self.test[name]
@@ -208,6 +252,11 @@ class Validation:
         assert(data.shape == obs.shape)
         assert(len(data.shape) == 4)
         data[np.invert(obs)] = HIDE_VAL # hide all not observed values
+        if format_to_img:
+            data_old = np.array(data)
+            obs_old = np.array(obs)
+            data = slices_to_img(data, idcs, self.handler.W, self.handler.H)
+            obs = slices_to_img(obs, idcs, self.handler.W, self.handler.H)
         return data.astype(float), obs
 
 
@@ -226,35 +275,38 @@ class Validation:
             name = cv_foldername(split)
             testidcs = self.test[name]
             data = self.handler.extr_data(testidcs)
+            if data.shape != prediction.shape:
+                prediction = slices_to_img(prediction, testidcs, self.handler.W, self.handler.H, inverse=True)
             mask = self.handler.extr_mask(testidcs)
             hidden = self.hidden[name]
             with open(os.path.join(name, 'report_{}.csv'.format(full_pred_name)), 'w') as report:
-                report.write('t,day,obs,miss,hid,mae,rmse,t_train,t_pred\n')
-                maes = []
-                rmses = []
+                report.write('t,day,obs,miss,hid,mae,rmse,r2,ssim,t_train,t_pred\n')
                 hids = []
                 miss = []
+                ssims = []
                 for t in range(self.handler.T):
                     n_obs = np.count_nonzero(mask[:, t])
                     n_mis = mask[:, t].size - n_obs
-                    n_hid, mae, rmse = compare(prediction[:, t].astype(float), data[:, t].astype(float), hidden[:, t])
+                    n_hid, mae, rmse, r2 = compare(prediction[:, t].astype(float), data[:, t].astype(float), hidden[:, t])
+                    ssim = calc_ssim(prediction[:, t], data[:, t], hidden[:, t], testidcs, self.handler.W, self.handler.H)
                     if n_hid > 0:
-                        maes.append(mae)
-                        rmses.append(rmse)
                         hids.append(n_hid)
                         miss.append(n_mis)
-                    report.write('{},{},{},{},{},{},{},{},{}\n'.format(t, self.handler.dates[t], n_obs - n_hid, n_mis, n_hid,
-                                                                    mae, rmse, time_train[split], time_pred))
+                        ssims.append(ssim)
+                    report.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(t, self.handler.dates[t], n_obs - n_hid, n_mis, n_hid,
+                                                                             mae, rmse, r2, ssim, time_train[split], time_pred))
                 hid_total = np.sum(np.array(hids))
                 miss_total = np.sum(np.array(miss))
                 if hids != []:
-                    mae_total = np.average(np.array(maes), weights=np.array(hids))
-                    rmses_total = np.average(np.array(rmses), weights=np.array(hids))
+                    _, mae_total, rmses_total, r2s_total = compare(prediction.astype(float), data.astype(float), hidden)
+                    ssim_total = np.mean(np.array(ssims))
                 else:
                     mae_total = 0
                     rmses_total = 0
-                report.write('all,all,{},{},{},{},{},{},{}\n'.format(hidden.size - hid_total - miss_total, miss_total, hid_total,
-                                                                     mae_total, rmses_total, time_train[split], time_pred))
+                    r2s_total = 0
+                    ssim_total = 0
+                report.write('all,all,{},{},{},{},{},{},{},{},{}\n'.format(hidden.size - hid_total - miss_total, miss_total, hid_total,
+                                                                           mae_total, rmses_total, r2s_total, ssim_total, time_train[split], time_pred))
             for_storing.append((prediction, testidcs, hidden))
             versions = write_comparison_report(name)
             self.reports[name] = versions
@@ -271,11 +323,11 @@ class Validation:
             return
         if all([versions == split_versions[0] for versions in split_versions]): # might not be true if some methods are run at the same time
             for version in split_versions[0]:
-                report_data = np.zeros((self.handler.T + 1, 9, len(self.reports)))
+                report_data = np.zeros((self.handler.T + 1, 11, len(self.reports)))
                 for split in range(len(self.reports)):
                     report_data[:, :, split] = np.genfromtxt(os.path.join(list(self.reports.keys())[split], version), delimiter=',')[1:, :]
                 with open(version, 'w') as report:
-                    report.write('t,day,obs,miss,hid,mae,sd_mae,rmse,rmse_std,t_train,t_pred\n')
+                    report.write('t,day,obs,miss,hid,mae,sd_mae,rmse,rmse_std,r2,r2_std,ssim,ssim_std,t_train,t_pred\n')
                     t_train, t_pred = np.mean(report_data[-1, -2:, :], axis=1)
                     for t in range(self.handler.T):
                         hid_l = report_data[t, 4, :]
@@ -283,12 +335,14 @@ class Validation:
                         mis = int(np.sum(report_data[t, 3, :]))
                         hid = int(np.sum(hid_l))
                         if np.sum(hid_l) == 0:
-                            mae = mae_sd = rmse = rmse_std = 0
+                            mae = mae_sd = rmse = rmse_std = r2 = r2_std = ssim = ssim_std = 0
                         else:
                             weights = hid_l / np.sum(hid_l)
                             mae, mae_sd = weighted_avg_and_std(report_data[t, 5, :], weights)
                             rmse, rmse_std = weighted_avg_and_std(report_data[t, 6, :], weights)
-                        report.write('{},{},{},{},{},{},{},{},{},{},{}\n'.format(t, self.handler.dates[t], obs, mis, hid, mae, mae_sd, rmse, rmse_std, t_train, t_pred))
+                            r2, r2_std = weighted_avg_and_std(report_data[t, 7, :], weights)
+                            ssim, ssim_std = weighted_avg_and_std(report_data[t, 8, :], weights)
+                        report.write('{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n'.format(t, self.handler.dates[t], obs, mis, hid, mae, mae_sd, rmse, rmse_std, r2, r2_std, ssim, ssim_std, t_train, t_pred))
                     hid_l = report_data[-1, 4, :]
                     obs = int(np.sum(report_data[-1, 2, :]))
                     mis = int(np.sum(report_data[-1, 3, :]))
@@ -299,7 +353,9 @@ class Validation:
                         weights = hid_l / np.sum(hid_l)
                     mae, mae_sd = weighted_avg_and_std(report_data[-1, 5, :], weights)
                     rmse, rmse_std = weighted_avg_and_std(report_data[-1, 6, :], weights)
-                    report.write('all,all,{},{},{},{},{},{},{},{},{}\n'.format(obs, mis, hid, mae, mae_sd, rmse, rmse_std, t_train, t_pred))
+                    r2, r2_std = weighted_avg_and_std(report_data[-1, 7, :], weights)
+                    ssim, ssim_std = weighted_avg_and_std(report_data[-1, 8, :], weights)
+                    report.write('all,all,{},{},{},{},{},{},{},{},{},{},{},{},{}\n'.format(obs, mis, hid, mae, mae_sd, rmse, rmse_std, r2, r2_std, ssim, ssim_std, t_train, t_pred))
             write_comparison_report(os.getcwd())
             plot_error_over_time(split_versions[0])
             plot_error_over_time(split_versions[0], cumulated=False)

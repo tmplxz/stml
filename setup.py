@@ -14,6 +14,7 @@ setup(
         "numpy >= 1.18.1",
         "scipy >= 1.3.0",
         "scikit-learn >= 0.21.2",
+        "scikit-image >= 0.17",
         "Pillow >= 6.0.0"
    ],
 )
