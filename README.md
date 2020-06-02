@@ -10,7 +10,7 @@ Keep in mind that this software serves as an exemplary implementation of theoret
 
 ## Software Requirements
 
-The software is implemented and tested with Python 3.5.
+The software is implemented and tested with Python 3.6.
 It comes with a Dockerfile and thus can be run inside a Docker container.
 For usage without containers, Python needs to be installed.
 Next install this package by running `pip install .` in the root directoriy of the repository.
@@ -59,15 +59,15 @@ For usage, download it directly, unzip the obtained archive, and pass `-d [downl
 
 ## Attached Results
 
-Images and error reports on `FRA` data can be found at <https://www.dropbox.com/sh/rj959rhjr9ndec0/AAAOA8vSzv0pANMFZXstjxwWa>, and results on `GER` data can be downloaded from <https://www.dropbox.com/sh/dojhb0dhzljznyy/AAC-PVlGidGFkx-RFvQw5oG3a>.
-This software allows to reproduce all these results, the command line arguments can be dervied from filenames. Resulting images can also be inspected with the `gap_filling_viewer`, by passing the downloaded directories as arguments. As an example, viewing downloaded *CROSS* predictions on `FRA` can be done by running:
+Images and error reports on `GER` data can be found at <https://www.dropbox.com/sh/dojhb0dhzljznyy/AAC-PVlGidGFkx-RFvQw5oG3a>, and results on `FRA` data can be downloaded from <https://www.dropbox.com/sh/rj959rhjr9ndec0/AAAOA8vSzv0pANMFZXstjxwWa>.
+This software allows to reproduce all these results, the command line arguments can be dervied from filenames. Resulting images can also be inspected with the `gap_filling_viewer`, by passing the downloaded directories as arguments. As an example, viewing downloaded *CROSS* predictions on `GER` can be done by running:
 
 `python scripts/gap_filling_viewer.py`
 `-l [path]/imgs/original_outline/`
 `-m [path]/imgs/mask/`
-`-r [path]/imgs/pred_outline_mrf_s0_01_tp_es_0_01_cross3_sup_em5_k32means_spatial_clouds0_2/`
-`-R [path]/report_mrf_s0_01_tp_es_0_01_cross3_sup_em5_k32means_spatial_clouds0_2.csv`
-`-y 2016`
+`-r [path]/imgs/pred_outline_mrf_s0_01_tp_tp_0_1_cross3_sup_em5_k32means_spatial_clouds0_2/`
+`-R [path]/report_mrf_s0_01_tp_tp_0_1_cross3_sup_em5_k32means_spatial_clouds0_2.csv`
+`-y 2018`
 
 ## Reference
 

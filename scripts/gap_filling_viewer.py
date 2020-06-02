@@ -126,7 +126,7 @@ class MainWindow():
             self.imgs_pred.append(img.resize((self.img_w, self.img_w), resample=0))
             self.imgs_orig_m.append(Image.blend(self.imgs_orig[-1], imgs_m[index].convert(mode='RGB').resize((self.img_w, self.img_w), resample=0), alpha=.5))
             self.imgs_pred_m.append(Image.blend(self.imgs_pred[-1], imgs_m[index].convert(mode='RGB').resize((self.img_w, self.img_w), resample=0), alpha=.5))
-            self.cc.append(1 - np.count_nonzero(np.array(imgs_m[index])) / (self.imgs_orig[0].size[0] * self.imgs_orig[0].size[0]))
+            self.cc.append(1 - np.count_nonzero(np.array(imgs_m[index])) / np.array(imgs_m[index]).size)
         self.curr_img = 0
         # text labels and logos
         h_logos = int(h / 17)
